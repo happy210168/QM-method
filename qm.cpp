@@ -8,15 +8,18 @@
 using namespace std;
 
 //variable
-int n=0; //'-' numbers
-int k[N+1]={0},j=0;
-int round=1;
+int n=0; //The number of '-' in a string  
+int k[N+1]={0},j=0; //use in recursive forloop function
+int round=1; //the number of round
 vector<int> A(N,0); //store '-' position
 vector<int> B; //store minterm 
-vector<vector<string> > group,tmpgroup,nextgroup;
-vector<int> minterm;
-vector<string> prime;
-fstream ifp,ofp;
+vector<vector<string> > group,tmpgroup,nextgroup; //store strings in every round
+vector<int> minterm; //store input minterm
+vector<string> prime; //store the string don't combine
+fstream ifp,ofp; //file pointer
+vector<vector<int> > Q; //2-D vector store result Chart
+vector<string> output;
+
 
 //function 
 void X_pos(string str1); //check '-' postion
@@ -24,17 +27,18 @@ void divide(); //transform input minterm into 10 groups store in vector<vector<s
 void forloop(int count,string str1); //Generate all combination of don't care bits and transform to minterm store in B
 int btod(string str1);	//binary to decimal
 int bit_num(int num); //compute decimal bits
-void print_min(string str1,int a,int b);
+void print_min(string str1,int a,int b); //print out e.g. 111111111-: 1022,1023
 string invstr(string str1); //reverse input string
 int onebit(string str1,string str2);  //1-bit different 
-string combine(string str1,string str2);
-void print_round();
-void prime_term(string str1);
-void print_chart();
-void delete_repeat_term();
-int QM();
-void sort(vector<int>& vec);
-string convert_bit(string str1);
+string combine(string str1,string str2); //combine string to next round
+void print_round(); //print out one round
+void prime_term(string str1);	//store prime implicant's minterm 
+void print_chart(); //print Result chart
+void delete_duplicate_term(); //delete Duplicate term
+int QM(); //compare with adjacent group 
+void sort(vector<int>& vec); //sore vector 
+string convert_bit(string str1); //e.g. convert 1111111111 to abcdefghij
+int max_term(); //find index of prime implicant which have most X in chart 
 
 int main(){
 	int i=0;
@@ -65,7 +69,10 @@ int main(){
 	 	else break;	
 	} //ROUND2~ROUNDn 
 	
-	delete_repeat_term(); //delete repeat term
+	delete_duplicate_term(); //delete Duplicate term in prime
+	
+
+
 
 	print_chart(); //print out Result
 
@@ -101,20 +108,51 @@ void print_chart(){
 	}
 	cout << "---------------------+------------------------------------------------" << endl;
 
-	//function
+	//print function 
 	char s = 'a'; 
 	cout << "F("; 
 	for(int i=0;i<N;i++){
 	 	s = 'A'+ i;	
 		if(i!=N-1) cout << s << ",";
 		else cout << s << ")= ";
-		
+	}
+	cout << endl;
+
+	//function simply
+	//Q initialize
+	vector<vector<int> > q;
+	q.resize(prime.size());
+	for(int a=0;a<prime.size();a++) q.at(a).resize(minterm.size());
+	Q = q;
+	for(int i=0;i<prime.size();i++){
+		for(int j=0;j<minterm.size();j++) Q.at(i).at(j)=0;
 	}
 
+	//chart information to 2-D vector Q
+	for(int i=0;i<prime.size();i++){
+		prime_term(prime.at(i));
+		for(int j=0;j<B.size();j++){
+			for(int a=0;a<minterm.size();a++){
+				if(B.at(j) == minterm.at(a)){
+					Q[i][a]= 1;
+				}
+			}
+		}
+	}
 
+	if(max_term()!=-1) output.push_back( convert_bit(prime.at(max_term())) );
+	
+	
 
+/*for(int i=0;i<prime.size();i++){
+		for(int j=0;j<minterm.size();j++) cout << Q.at(i).at(j) << "  ";
+		cout << endl;
+	}*/
 
 }
+
+
+
 
 int bit_num(int num){
 	int count =0;
@@ -181,7 +219,7 @@ int QM(){
 	else return 1;
 } //QM function end
 
-void delete_repeat_term(){
+void delete_duplicate_term(){
 	vector<string> tmp;
 	int flag=1;
 	for(int i=0;i<prime.size();i++){
@@ -336,4 +374,36 @@ string convert_bit(string str1){
 	}
 	return bit;
 }
+
+//1's max
+int max_term(){
+	int count =0;
+	int max=0;
+	int max_index = 0;
+	int equal=0;
+	for(int i=0;i<Q.size();i++){
+		count = 0;
+		for(int j=0;j<Q.at(i).size();j++){
+			if(Q[i][j]==1) count++;
+		}
+		if(max < count){
+			max = count;
+			max_index = i;
+			equal = 0;
+		}
+		else if(max == count) equal = 1;
+	}
+
+	if(equal==1) return -1; //no max_term
+	else return max_index;
+	
+}
+
+
+
+
+
+
+
+
 
