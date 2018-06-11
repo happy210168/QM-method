@@ -22,11 +22,15 @@ void X_pos(string str1); //check '-' postion
 void divide(); //transform input minterm into 10 groups store in vector<vector<string> >group 
 void forloop(int count,string str1); //Generate all combination of don't care bits and transform to minterm store in B
 int btod(string str1);	//binary to decimal
+int bit_num(int num); //compute decimal bits
 void print_min(string str1,int a,int b);
 string invstr(string str1); //reverse input string
 int onebit(string str1,string str2);  //1-bit different 
 string combine(string str1,string str2);
 void print_round();
+void prime_term(string str1);
+void print_chart();
+void delete_repeat_term();
 int QM();
 string convert_bit(string str1);
 
@@ -49,27 +53,65 @@ int main(){
 		minterm.at(i) = temp;
 		i++;
 	}
-			
-	for(i=0;i<minterm.size();i++){
-		ofp << minterm.at(i) << endl;
-	}
 
-	divide(); //ROUND1(first divide)
+	divide(); //ROUND1(Divide minterm into 11 group)
 
 	while(1){
 		if(QM()){
 			continue;
 		}//if end
 	 	else break;	
-	} //ROUND2~
+	} //ROUND2~ROUNDn 
+	
+	delete_repeat_term(); //delete repeat term
 
-	cout << "================================Result================================"<< endl;
-	cout << "                    |" ;
-	for(i=0;i<minterm.size();i++) cout << "  " << minterm.at(i);
-	cout << endl;
-	cout << "--------------------+-------------------------------------------------" << endl;
+	print_chart(); //print out Result
+
 		
 	return 0;
+}
+
+void print_chart(){
+	int flag = 0;
+	cout << "================================Result================================"<< endl;
+	cout << "                     |" ;
+	for(int i=0;i<minterm.size();i++) cout << "  " << minterm.at(i);
+	cout << endl;
+	cout << "---------------------+------------------------------------------------" << endl;
+	
+	for(int i=0;i<prime.size();i++){ 
+		//abcdefghij term
+		cout << convert_bit(prime.at(i));
+		for(int a=0;a<21-convert_bit(prime.at(i)).size();a++) cout << " ";
+		cout << "|" ;
+		//"x"" or space " "
+		prime_term(prime.at(i));
+		for(int a=0;a<minterm.size();a++){
+			for(int b=0;b<B.size();b++){
+				if(minterm.at(a)== B.at(b)) flag=1;
+			}
+			if(flag){cout << " "; for(int c=0;c<bit_num(minterm.at(a));c++) cout << " "; cout << "x";  }
+		 	else {cout << "  "; for(int c=0;c<bit_num(minterm.at(a));c++) cout << " ";	}
+			flag =0;
+		}
+
+		cout << endl;
+	}
+
+	cout << "---------------------+------------------------------------------------" << endl;
+	
+
+}
+
+int bit_num(int num){
+	int count =0;
+	if(num ==0) return 1;
+	while(1){
+		num /= 10;
+		count ++;
+		if(num==0) break;
+	}
+	return count;
 }
 
 void print_round(){
@@ -126,6 +168,21 @@ int QM(){
 	else return 1;
 } //QM function end
 
+void delete_repeat_term(){
+	vector<string> tmp;
+	int flag=1;
+	for(int i=0;i<prime.size();i++){
+		if(tmp.size()==0) tmp.push_back(prime.at(i));
+		else{
+			flag=1;
+			for(int a=0;a<tmp.size();a++){
+				if(prime.at(i)==tmp.at(a)) flag=0;
+			}
+			if(flag) tmp.push_back(prime.at(i)); 			
+		}
+	}
+	prime = tmp;
+}
 
 string invstr(string str1){
 	string inv;
@@ -210,6 +267,7 @@ void print_min(string str1,int a,int b){ //print [str] : minterm  e.g. 000000000
 void prime_term(string str1){
 	X_pos(str1);
 	B.clear();
+	if(n==0) B.push_back(btod(str1));
 	if(n!=0) forloop(n,str1);
 }
 
@@ -242,7 +300,7 @@ string convert_bit(string str1){
 	for(int i=0;i<str1.size();i++){
 		if(str1.at(i)=='0'){
 			bit.push_back('a'+i);
-			bit.push_back('"');
+			bit.push_back('\'');
 		}
 		if(str1.at(i)=='1'){
 			bit.push_back('a'+i);
