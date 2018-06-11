@@ -13,12 +13,10 @@ int round=1;
 vector<int> A(10,0); //store '-' position
 vector<int> B; //store minterm 
 vector<vector<string> > group;
-vector<vector<string> > tmpgroup;
 vector<vector<string> > nextgroup;
 vector<int> minterm;
 vector<string> prime;
 fstream ifp,ofp;
-string str("11111111--");
 
 //function 
 void X_pos(string str1); //check '-' postion
@@ -29,6 +27,7 @@ void print_min(string str1);
 string invstr(string str1); //reverse input string
 int onebit(string str1,string str2);  //1-bit different 
 string combine(string str1,string str2);
+void print_round();
 int QM();
 
 
@@ -65,55 +64,69 @@ int main(){
 		if(group.at(i).size()!=0) cout << "------------------------" << endl;
 	}
 
+
 	while(1){
 		if(QM()){
-			round++;
-			printf("=========ROUND%d=========\n",round);
-			for(int i=0;i<11;i++){
-				for(int j=0;j<group.at(i).size();j++){
-					print_min(group.at(i).at(j));
-				}
-				if(group.at(i).size()!=0) cout << "------------------------" << endl;
-			}
+			print_round();
 		}//if end
 	 	else break;	
-	} //ROUND2
-		
+	} //ROUND2 
 
 	
 	
 	return 0;
 }
 
+void print_round(){
+		round++;
+		printf("=========ROUND%d=========\n",round);
+		for(int i=0;i<11;i++){
+			for(int j=0;j<group.at(i).size();j++){
+				print_min(group.at(i).at(j));
+			}
+			if(group.at(i).size()!=0) cout << "------------------------" << endl;
+		}
+}
+
 int QM(){
-	int a,b,c,count=0;
+	vector<vector<string> > tmpgroup;
 	tmpgroup = group;
-	for(a=0;a<11;a++){
-		for(b=0;b<group[a].size();b++){
-			for(c=0;c<group[a+1].size();c++){
-				if(onebit(group[a].at(b),group[a+1].at(c))){
-					count++;
-					nextgroup[a].push_back(combine(group[a].at(b),group[a+1].at(c)));
-					tmpgroup[a].at(b).at(10) = 'v';
-					tmpgroup[a+1].at(c).at(10) ='v';
+	nextgroup.clear();
+	nextgroup.resize(11);
+	unsigned int a=0,b=0,c=0,count=0;
+	for(a=0;a<group.size()-1;a++){
+		if(!group.at(a).size()) continue;
+		for(b=0;b<group.at(a).size();b++){
+			for(c=0;c<group.at(a+1).size();c++){
+				if(onebit(group.at(a).at(b),group.at(a+1).at(c))){
+					string str1,str2,result;
+					str1 = group.at(a).at(b); 
+					str2 = group.at(a+1).at(c);
+					result = combine(str1,str2);
+					count ++;
+					nextgroup.at(a).push_back(result);
+					tmpgroup.at(a).at(b).push_back('v'); 
+					tmpgroup.at(a+1).at(c).push_back('v');
 				} //if(onebit) 
-			
-			} //for loop k
-
-		} //for loop j
-
-	} //for loop i
-	for(a=0;a<11;a++){
-		for(b=0;b<tmpgroup[a].size();b++){
-			if(tmpgroup[a].at(b).size()==10) prime.push_back(tmpgroup[a].at(b));
+			} //for loop c
+		} //for loop b
+	} //for loop a
+	for(a=0;a<group.size();a++){
+		if(!group.at(a).size()) continue;
+		for(b=0;b<group.at(a).size();b++){
+			if(tmpgroup.at(a).at(b).back() != 'v'){
+				prime.push_back(tmpgroup.at(a).at(b));
+			}
 		}
 	}
+
+
+	group.clear();
 	group = nextgroup;
-	if(count==0){
-		
+	if(count==0){		
 		return 0; 
 	}
-	return 1;
+	else return 1;
 } //QM function end
 
 
@@ -152,11 +165,9 @@ void divide(){
 int onebit(string str1,string str2){  //onebit different
 	int count=0;
 	for(int i=0;i<10;i++){
-		if(str1.at(i)!=str2.at(i))
-			count++;
-		if(count>1) 
-			return 0;
+		if(str1.at(i)!=str2.at(i)) count++;
 	}
+	if(count>1) return 0;
 	return 1;
 }
 
@@ -167,7 +178,7 @@ string combine(string str1,string str2){ //combine two str and store into nextgr
 			df = i;
 		}
 	}
-	str1.at(df) = '-';	
+	str1.at(df) = '-';
 	return str1;
 }
 
@@ -196,6 +207,12 @@ void print_min(string str1){ //print [str] : minterm  e.g. 0000000000- : 0,1
 	}
 	}
 	else cout << " " << btod(str1) << endl;
+}
+
+void prime_term(string str1){
+	X_pos(str1);
+	B.clear();
+	if(n!=0) forloop(n,str1);
 }
 
 void X_pos(string str1){
