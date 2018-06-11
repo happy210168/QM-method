@@ -11,13 +11,15 @@ using namespace std;
 int n=0; //The number of '-' in a string  
 int k[N+1]={0},j=0; //use in recursive forloop function
 int round=1; //the number of round
+int vline=0; //vertical line count in chart
 vector<int> A(N,0); //store '-' position
-vector<int> B; //store minterm 
+vector<int> B; //store minterm
 vector<vector<string> > group,tmpgroup,nextgroup; //store strings in every round
 vector<int> minterm; //store input minterm
 vector<string> prime; //store the string don't combine
 fstream ifp,ofp; //file pointer
 vector<vector<int> > Q; //2-D vector store result Chart
+vector<int> index;
 vector<string> output;
 
 
@@ -39,6 +41,10 @@ int QM(); //compare with adjacent group
 void sort(vector<int>& vec); //sore vector 
 string convert_bit(string str1); //e.g. convert 1111111111 to abcdefghij
 int max_term(); //find index of prime implicant which have most X in chart 
+void EPI(); //find essential prime implicant in chart and store in output
+void PI(); //find prime implicant in chart and store in output
+void vertical_line(); //draw vertical line in chart
+int in(int u); //check this term index have been output or not
 
 int main(){
 	int i=0;
@@ -140,11 +146,20 @@ void print_chart(){
 		}
 	}
 
-	if(max_term()!=-1) output.push_back( convert_bit(prime.at(max_term())) );
+	//if(max_term()!=-1) output.push_back( convert_bit(prime.at(max_term())) );
 	
-	
+	EPI(); //store essential prime implicant in output
 
-/*for(int i=0;i<prime.size();i++){
+
+	vertical_line();
+
+
+	PI();
+
+
+	for(int i=0;i<output.size();i++) cout << output.at(i) << endl;
+
+	/*for(int i=0;i<prime.size();i++){
 		for(int j=0;j<minterm.size();j++) cout << Q.at(i).at(j) << "  ";
 		cout << endl;
 	}*/
@@ -380,30 +395,87 @@ int max_term(){
 	int count =0;
 	int max=0;
 	int max_index = 0;
-	int equal=0;
 	for(int i=0;i<Q.size();i++){
 		count = 0;
 		for(int j=0;j<Q.at(i).size();j++){
 			if(Q[i][j]==1) count++;
 		}
-		if(max < count){
+		if(max < count && !in(i)){
 			max = count;
 			max_index = i;
-			equal = 0;
 		}
-		else if(max == count) equal = 1;
 	}
-
-	if(equal==1) return -1; //no max_term
-	else return max_index;
+	return max_index;
 	
 }
 
+void EPI(){
+	int count=0;
+	for(int i=0;i<Q.size();i++){
+		for(int j=0;j<Q.at(i).size();j++){
+			count = 0;
+			if(Q.at(i).at(j)==1){
+				for(int a=0;a<Q.size();a++){
+					if(a!=i && Q.at(a).at(j)==1) count++;
+				}
+			}
+			else {count = 1;continue;}
+			if(Q.at(i).at(j)==1 && count==0) break;
+		}
+		if(count==0) output.push_back( convert_bit(prime.at(i)));
+	}
+
+}
+
+void vertical_line(){
+	int count=0;
+	for(int i=0;i<Q.size();i++){
+		for(int j=0;j<Q.at(i).size();j++){
+			count = 0;
+			if(Q.at(i).at(j)==1){
+				for(int a=0;a<Q.size();a++){
+					if(a!=i && Q.at(a).at(j)==1) count++;
+				}
+			}
+			else {count = 1;continue;}
+			if(Q.at(i).at(j)==1 && count==0) break;
+		}
+		if(count==0){
+			index.push_back(i);
+			for(int j=0;j<Q.at(i).size();j++){
+				if(Q.at(i).at(j)==1){
+					vline++;
+					for(int a=0;a<Q.size();a++){	
+						if(a!=i) Q.at(a).at(j)=0;
+					}
+				}
+			}	
+		}
+	}
+}
+
+int in(int u){
+	for(int i=0;i<index.size();i++){
+		if(u==index.at(i)) return 1;
+	}
+	return 0;
+}
 
 
+void PI(){
+	while(vline!=minterm.size()){
+		int i = max_term();
+		output.push_back( convert_bit(prime.at(i)));		
+		index.push_back(i);
+		for(int j=0;j<Q.at(i).size();j++){
+			if(Q.at(i).at(j)==1){
+				vline++;
+				for(int a=0;a<Q.size();a++){	
+					if(a!=i) Q.at(a).at(j)=0;
+				}
+			}
+		}	
 
 
-
-
-
-
+	}
+}
