@@ -4,7 +4,7 @@
 #include<vector>
 #include<cstdio>
 #include<cstdlib>
-#define N 5
+#define N 10
 using namespace std;
 
 //variable
@@ -19,8 +19,8 @@ vector<int> minterm; //store input minterm
 vector<string> prime; //store the string don't combine
 fstream ifp,ofp; //file pointer
 vector<vector<int> > Q; //2-D vector store result Chart
-vector<int> index;
-vector<string> output;
+vector<int> index; //store row index (prime string index) in chart
+vector<string> output; //function output result
 
 
 //function 
@@ -78,8 +78,6 @@ int main(){
 	delete_duplicate_term(); //delete Duplicate term in prime
 	
 
-
-
 	print_chart(); //print out Result
 
 		
@@ -88,43 +86,42 @@ int main(){
 
 void print_chart(){
 	int flag = 0;
-	cout << "================================Result================================"<< endl;
-	cout << "                     |" ;
-	for(int i=0;i<minterm.size();i++) cout << "  " << minterm.at(i);
-	cout << endl;
-	cout << "---------------------+------------------------------------------------" << endl;
+	ofp << "================================Result================================"<< endl;
+	ofp << "                     |" ;
+	for(int i=0;i<minterm.size();i++) ofp << "  " << minterm.at(i);
+	ofp << endl;
+	ofp << "---------------------+------------------------------------------------" << endl;
 	
 	for(int i=0;i<prime.size();i++){ 
 		//abcdefghij term
-		cout << convert_bit(prime.at(i));
-		for(int a=0;a<21-convert_bit(prime.at(i)).size();a++) cout << " ";
-		cout << "|" ;
+		ofp << convert_bit(prime.at(i));
+		for(int a=0;a<21-convert_bit(prime.at(i)).size();a++) ofp << " ";
+		ofp << "|" ;
 		//"x"" or space " "
 		prime_term(prime.at(i));
 		for(int a=0;a<minterm.size();a++){
 			for(int b=0;b<B.size();b++){
 				if(minterm.at(a)== B.at(b)) flag=1;
 			}
-			if(flag){cout << " "; for(int c=0;c<bit_num(minterm.at(a));c++) cout << " "; cout << "x";  }
-		 	else {cout << "  "; for(int c=0;c<bit_num(minterm.at(a));c++) cout << " ";	}
+			if(flag){ofp << " "; for(int c=0;c<bit_num(minterm.at(a));c++) ofp << " "; ofp << "x";  }
+		 	else {ofp << "  "; for(int c=0;c<bit_num(minterm.at(a));c++) ofp << " ";	}
 			flag =0;
 		}
 
-		cout << endl;
+		ofp << endl;
 	}
-	cout << "---------------------+------------------------------------------------" << endl;
+	ofp << "---------------------+------------------------------------------------" << endl;
 
 	//print function 
 	char s = 'a'; 
-	cout << "F("; 
+	ofp << "F("; 
 	for(int i=0;i<N;i++){
 	 	s = 'A'+ i;	
-		if(i!=N-1) cout << s << ",";
-		else cout << s << ")= ";
+		if(i!=N-1) ofp << s << ",";
+		else ofp << s << ")= ";
 	}
-	cout << endl;
 
-	//function simply
+	//function simplify
 	//Q initialize
 	vector<vector<int> > q;
 	q.resize(prime.size());
@@ -146,27 +143,18 @@ void print_chart(){
 		}
 	}
 
-	//if(max_term()!=-1) output.push_back( convert_bit(prime.at(max_term())) );
-	
 	EPI(); //store essential prime implicant in output
 
-
-	vertical_line();
-
+	vertical_line(); 
 
 	PI();
 
-
-	for(int i=0;i<output.size();i++) cout << output.at(i) << endl;
-
-	/*for(int i=0;i<prime.size();i++){
-		for(int j=0;j<minterm.size();j++) cout << Q.at(i).at(j) << "  ";
-		cout << endl;
-	}*/
+	for(int i=0;i<output.size();i++){
+		if(i!=output.size()-1) ofp << output.at(i) << " + ";
+		else ofp << output.at(i) << endl;
+	}
 
 }
-
-
 
 
 int bit_num(int num){
@@ -181,12 +169,12 @@ int bit_num(int num){
 }
 
 void print_round(){
-		printf("==========ROUND%d==========\n",round);
+		ofp << "============ROUND" << round <<  "============\n";
 		for(int i=0;i<N+1;i++){
 			for(int j=0;j<group.at(i).size();j++){
 				print_min(group.at(i).at(j),i,j);
 			}
-			if(group.at(i).size()!=0) cout << " ------------------------" << endl;
+			if(group.at(i).size()!=0) ofp << " ------------------------" << endl;
 		}
 		round++;
 }
@@ -210,8 +198,8 @@ int QM(){
 					result = combine(str1,str2);
 					count ++;
 					nextgroup.at(a).push_back(result);
-					if(tmpgroup.at(a).at(b).front()!='v') tmpgroup.at(a).at(b) = "v " + tmpgroup.at(a).at(b);//tmpgroup.at(a).at(b).push_back('v'); 
-					if(tmpgroup.at(a+1).at(c).front()!='v') tmpgroup.at(a+1).at(c) = "v " + tmpgroup.at(a+1).at(c);//tmpgroup.at(a+1).at(c).push_back('v');
+					if(tmpgroup.at(a).at(b).front()!='v') tmpgroup.at(a).at(b) = "v " + tmpgroup.at(a).at(b);
+					if(tmpgroup.at(a+1).at(c).front()!='v') tmpgroup.at(a+1).at(c) = "v " + tmpgroup.at(a+1).at(c);
 				} //if(onebit) 
 			} //for loop c
 		} //for loop b
@@ -331,18 +319,23 @@ void print_min(string str1,int a,int b){ //print [str] : minterm  e.g. 000000000
 	X_pos(str1);
 	B.clear();
 	if(n!=0) forloop(n,str1);
-	if(tmpgroup.at(a).at(b).at(0)=='v') cout << "v "<< str1 << ": ";
-	else if(b>0 &&group.at(a).at(b-1) == group.at(a).at(b)) cout << "x "<< str1 << ": ";
-	else cout << "  " << str1 << ": ";
-	//cout << "　"<< str1 << ": ";
+
+	for(int j=0;j<group.at(a).size();j++){
+			if(j!=b && str1==group.at(a).at(j))
+			tmpgroup.at(a).at(j) = "x "+ tmpgroup.at(a).at(j);				
+	}
+
+	if(tmpgroup.at(a).at(b).at(0)=='v') ofp << "v "<< str1 << ": "; //combined string
+	else if(tmpgroup.at(a).at(b).at(0)=='x') ofp << "x " << str1 <<": "; //duplicate string
+	else ofp << "  " << str1 << ": ";
 
 	if(n!=0){
 	for(int i=0;i<B.size();i++){
-		if(i!=B.size()-1) cout << B.at(i) << ",";
-		else cout << B.at(i) << endl;
+		if(i!=B.size()-1) ofp << B.at(i) << ",";
+		else ofp << B.at(i) << endl;
 	}
 	}
-	else cout << " " << btod(str1) << endl;
+	else ofp << " " << btod(str1) << endl;
 }
 
 void prime_term(string str1){
@@ -366,6 +359,7 @@ void X_pos(string str1){
 	}
 }
 
+//binary to decimal
 int btod(string str1){
 	int d=0;
 	for(int i=0;i<N;i++){
@@ -408,6 +402,7 @@ int max_term(){
 	return max_index;
 	
 }
+
 
 void EPI(){
 	int count=0;
@@ -475,7 +470,5 @@ void PI(){
 				}
 			}
 		}	
-
-
 	}
 }
