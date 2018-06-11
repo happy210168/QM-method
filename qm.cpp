@@ -4,13 +4,14 @@
 #include<vector>
 #include<cstdio>
 #include<cstdlib>
+#define N 5
 using namespace std;
 
 //variable
 int n=0; //'-' numbers
-int k[11]={0},j=0;
+int k[N+1]={0},j=0;
 int round=1;
-vector<int> A(10,0); //store '-' position
+vector<int> A(N,0); //store '-' position
 vector<int> B; //store minterm 
 vector<vector<string> > group,tmpgroup,nextgroup;
 vector<int> minterm;
@@ -32,13 +33,14 @@ void prime_term(string str1);
 void print_chart();
 void delete_repeat_term();
 int QM();
+void sort(vector<int>& vec);
 string convert_bit(string str1);
 
 int main(){
 	int i=0;
 	int temp;
-	group.resize(11);
-	nextgroup.resize(11);
+	group.resize(N+1);
+	nextgroup.resize(N+1);
 	//file processing
 	ifp.open("input.txt",ios::in);
 	ofp.open("output.txt",ios::out);
@@ -97,9 +99,20 @@ void print_chart(){
 
 		cout << endl;
 	}
-
 	cout << "---------------------+------------------------------------------------" << endl;
-	
+
+	//function
+	char s = 'a'; 
+	cout << "F("; 
+	for(int i=0;i<N;i++){
+	 	s = 'A'+ i;	
+		if(i!=N-1) cout << s << ",";
+		else cout << s << ")= ";
+		
+	}
+
+
+
 
 }
 
@@ -115,12 +128,12 @@ int bit_num(int num){
 }
 
 void print_round(){
-		printf("=========ROUND%d=========\n",round);
-		for(int i=0;i<11;i++){
+		printf("==========ROUND%d==========\n",round);
+		for(int i=0;i<N+1;i++){
 			for(int j=0;j<group.at(i).size();j++){
 				print_min(group.at(i).at(j),i,j);
 			}
-			if(group.at(i).size()!=0) cout << "------------------------" << endl;
+			if(group.at(i).size()!=0) cout << " ------------------------" << endl;
 		}
 		round++;
 }
@@ -128,10 +141,10 @@ void print_round(){
 
 int QM(){
 	tmpgroup.clear();
-	tmpgroup.resize(11);
+	tmpgroup.resize(N+1);
 	tmpgroup = group;
 	nextgroup.clear();
-	nextgroup.resize(11);
+	nextgroup.resize(N+1);
 	unsigned int a=0,b=0,c=0,count=0;
 	for(a=0;a<group.size()-1;a++){
 		if(!group.at(a).size()) continue;
@@ -160,7 +173,7 @@ int QM(){
 	}
 	print_round();
 	group.clear();
-	group.resize(11);
+	group.resize(N+1);
 	group = nextgroup;
 	if(count==0){		
 		return 0; 
@@ -202,7 +215,7 @@ void divide(){
 		string str1;	
 		tmp = minterm.at(i);
 		//transform decimal to binary and store in group
-		for(int j=0;j<10;j++){
+		for(int j=0;j<N;j++){
 			if((tmp>>j) & 1){
 				str1.push_back('1');
 				count++;
@@ -215,7 +228,7 @@ void divide(){
 
 int onebit(string str1,string str2){  //onebit different
 	int count=0;
-	for(int i=0;i<10;i++){
+	for(int i=0;i<N;i++){
 		if(str1.at(i)!=str2.at(i)) count++;
 	}
 	if(count>1) return 0;
@@ -224,7 +237,7 @@ int onebit(string str1,string str2){  //onebit different
 
 string combine(string str1,string str2){ //combine two str and store into nextgruop
 	int df;
-	for(int i=0;i<10;i++){
+	for(int i=0;i<N;i++){
 		if(str1.at(i)!=str2.at(i)){
 			df = i;
 		}
@@ -243,6 +256,21 @@ void forloop(int count,string str1){   //input '-' numbers in str
 			B.push_back(btod(str1));
 	  }	
 	else forloop(count-1,str1);  //use recursion to generate all combination of don't care bits
+	}
+	sort(B);
+}
+
+void sort(vector<int>& vec){
+	int now;
+	int tmp;
+	for(int i=1;i<vec.size();i++){
+		now = i;
+		tmp = vec.at(i);
+	while(tmp<vec.at(now-1)){
+		vec.at(now) = vec.at(now-1);
+		now--;
+	}
+	vec.at(now) = tmp;
 	}
 }
 
@@ -273,11 +301,11 @@ void prime_term(string str1){
 
 void X_pos(string str1){
 	n=0;
-	for(int i=0;i<10;i++) A[i]=0;
-	for(int i=0;i<10;i++){
+	for(int i=0;i<N;i++) A[i]=0;
+	for(int i=0;i<N;i++){
 		if(str1.at(i)=='-')	n++; //compute '-'
 	}	
-	for(int i=0,j=0;i<10;i++){
+	for(int i=0,j=0;i<N;i++){
 		if(str1.at(i)=='-'){
 			A[j] = i;
 		 	j++;	//assign postion to A
@@ -287,9 +315,9 @@ void X_pos(string str1){
 
 int btod(string str1){
 	int d=0;
-	for(int i=0;i<10;i++){
+	for(int i=0;i<N;i++){
 		if(str1.at(i)=='1'){
-			d += 1<<(9-i);
+			d += 1<<(N-1-i);
 		}
 	}
 	return d;
