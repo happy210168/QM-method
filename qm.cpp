@@ -12,8 +12,7 @@ int k[11]={0},j=0;
 int round=1;
 vector<int> A(10,0); //store '-' position
 vector<int> B; //store minterm 
-vector<vector<string> > group;
-vector<vector<string> > nextgroup;
+vector<vector<string> > group,tmpgroup,nextgroup;
 vector<int> minterm;
 vector<string> prime;
 fstream ifp,ofp;
@@ -23,13 +22,13 @@ void X_pos(string str1); //check '-' postion
 void divide(); //transform input minterm into 10 groups store in vector<vector<string> >group 
 void forloop(int count,string str1); //Generate all combination of don't care bits and transform to minterm store in B
 int btod(string str1);	//binary to decimal
-void print_min(string str1);
+void print_min(string str1,int a,int b);
 string invstr(string str1); //reverse input string
 int onebit(string str1,string str2);  //1-bit different 
 string combine(string str1,string str2);
 void print_round();
 int QM();
-
+string convert_bit(string str1);
 
 int main(){
 	int i=0;
@@ -56,40 +55,38 @@ int main(){
 	}
 
 	divide(); //ROUND1(first divide)
-	printf("=========ROUND%d=========\n",round);
-	for(int i=0;i<11;i++){
-		for(int j=0;j<group.at(i).size();j++){
-			print_min(group.at(i).at(j));
-		}
-		if(group.at(i).size()!=0) cout << "------------------------" << endl;
-	}
-
 
 	while(1){
 		if(QM()){
-			print_round();
+			continue;
 		}//if end
 	 	else break;	
-	} //ROUND2 
+	} //ROUND2~
 
-	
-	
+	cout << "================================Result================================"<< endl;
+	cout << "                    |" ;
+	for(i=0;i<minterm.size();i++) cout << "  " << minterm.at(i);
+	cout << endl;
+	cout << "--------------------+-------------------------------------------------" << endl;
+		
 	return 0;
 }
 
 void print_round(){
-		round++;
 		printf("=========ROUND%d=========\n",round);
 		for(int i=0;i<11;i++){
 			for(int j=0;j<group.at(i).size();j++){
-				print_min(group.at(i).at(j));
+				print_min(group.at(i).at(j),i,j);
 			}
 			if(group.at(i).size()!=0) cout << "------------------------" << endl;
 		}
+		round++;
 }
 
+
 int QM(){
-	vector<vector<string> > tmpgroup;
+	tmpgroup.clear();
+	tmpgroup.resize(11);
 	tmpgroup = group;
 	nextgroup.clear();
 	nextgroup.resize(11);
@@ -105,8 +102,8 @@ int QM(){
 					result = combine(str1,str2);
 					count ++;
 					nextgroup.at(a).push_back(result);
-					tmpgroup.at(a).at(b).push_back('v'); 
-					tmpgroup.at(a+1).at(c).push_back('v');
+					if(tmpgroup.at(a).at(b).front()!='v') tmpgroup.at(a).at(b) = "v " + tmpgroup.at(a).at(b);//tmpgroup.at(a).at(b).push_back('v'); 
+					if(tmpgroup.at(a+1).at(c).front()!='v') tmpgroup.at(a+1).at(c) = "v " + tmpgroup.at(a+1).at(c);//tmpgroup.at(a+1).at(c).push_back('v');
 				} //if(onebit) 
 			} //for loop c
 		} //for loop b
@@ -114,14 +111,14 @@ int QM(){
 	for(a=0;a<group.size();a++){
 		if(!group.at(a).size()) continue;
 		for(b=0;b<group.at(a).size();b++){
-			if(tmpgroup.at(a).at(b).back() != 'v'){
+			if(tmpgroup.at(a).at(b).front() != 'v'){
 				prime.push_back(tmpgroup.at(a).at(b));
 			}
 		}
 	}
-
-
+	print_round();
 	group.clear();
+	group.resize(11);
 	group = nextgroup;
 	if(count==0){		
 		return 0; 
@@ -157,9 +154,6 @@ void divide(){
 		}	
 		group.at(count).push_back(invstr(str1));				
 	}
-	
-
-	
 }
 
 int onebit(string str1,string str2){  //onebit different
@@ -195,14 +189,18 @@ void forloop(int count,string str1){   //input '-' numbers in str
 	}
 }
 
-void print_min(string str1){ //print [str] : minterm  e.g. 0000000000- : 0,1
+void print_min(string str1,int a,int b){ //print [str] : minterm  e.g. 0000000000- : 0,1
 	X_pos(str1);
 	B.clear();
 	if(n!=0) forloop(n,str1);
-	cout << " " <<str1 << ":";
+	if(tmpgroup.at(a).at(b).at(0)=='v') cout << "v "<< str1 << ": ";
+	else if(b>0 &&group.at(a).at(b-1) == group.at(a).at(b)) cout << "x "<< str1 << ": ";
+	else cout << "  " << str1 << ": ";
+	//cout << "　"<< str1 << ": ";
+
 	if(n!=0){
 	for(int i=0;i<B.size();i++){
-		if(i!=B.size()-1) cout << " " << B.at(i) << ",";
+		if(i!=B.size()-1) cout << B.at(i) << ",";
 		else cout << B.at(i) << endl;
 	}
 	}
@@ -238,3 +236,18 @@ int btod(string str1){
 	}
 	return d;
 }
+
+string convert_bit(string str1){
+	string bit;
+	for(int i=0;i<str1.size();i++){
+		if(str1.at(i)=='0'){
+			bit.push_back('a'+i);
+			bit.push_back('"');
+		}
+		if(str1.at(i)=='1'){
+			bit.push_back('a'+i);
+		}
+	}
+	return bit;
+}
+
