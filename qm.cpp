@@ -15,7 +15,8 @@ int vline=0; //vertical line count in chart
 vector<int> A(N,0); //store '-' position
 vector<int> B; //store minterm
 vector<vector<string> > group,tmpgroup,nextgroup; //store strings in every round
-vector<int> minterm; //store input minterm
+vector<int> minterm,Minterm,dontcare; //store input minterm 
+string input ="    "; //store input string 
 vector<string> prime; //store the string don't combine
 fstream ifp,ofp; //file pointer
 vector<vector<int> > Q; //2-D vector store result Chart
@@ -48,7 +49,7 @@ int in(int u); //check this term index have been output or not
 
 int main(){
 	int i=0;
-	int temp;
+	string temp;
 	group.resize(N+1);
 	nextgroup.resize(N+1);
 	//file processing
@@ -60,11 +61,21 @@ int main(){
 	}
 	
 	//read input file
-	while(ifp >> temp){
-		if(i+1 > minterm.size()) minterm.resize(i+1);
-		minterm.at(i) = temp;
-		i++;
+	while(ifp >> input){
+		if(input[0]==40){
+			while(input[j]!=41) j++;
+			for(int i=1;i<j;i++) temp[i-1] = input[i];
+			minterm.push_back(atoi(temp.c_str()));
+			dontcare.push_back(atoi(temp.c_str()));
+		}
+		else{
+			minterm.push_back(atoi(input.c_str()));	//include don't care term
+			Minterm.push_back(atoi(input.c_str())); //exclude don't care term
+		}
 	}
+
+	for(int i=0;i<minterm.size();i++) cout << minterm.at(i) << endl;
+	for(int i=0;i<Minterm.size();i++) cout << Minterm.at(i) << endl;
 
 	divide(); //ROUND1(Divide minterm into 11 group)
 
@@ -85,26 +96,36 @@ int main(){
 }
 
 void print_chart(){
+	int count =0;
 	int flag = 0;
 	ofp << "================================Result================================"<< endl;
 	ofp << "                     |" ;
-	for(int i=0;i<minterm.size();i++) ofp << "  " << minterm.at(i);
+	for(int i=0;i<Minterm.size();i++) ofp << "  " << Minterm.at(i);
 	ofp << endl;
 	ofp << "---------------------+------------------------------------------------" << endl;
 	
 	for(int i=0;i<prime.size();i++){ 
 		//abcdefghij term
+		prime_term(prime.at(i));
+		count =0;
+		for(int a=0;a<B.size();a++){
+			for(int b=0;b<dontcare.size();b++){
+				if(B.at(a) == dontcare.at(b)) count++;
+			}
+		}
+		if(count==B.size()) continue;
+		
+
 		ofp << convert_bit(prime.at(i));
 		for(int a=0;a<21-convert_bit(prime.at(i)).size();a++) ofp << " ";
 		ofp << "|" ;
 		//"x"" or space " "
-		prime_term(prime.at(i));
-		for(int a=0;a<minterm.size();a++){
+		for(int a=0;a<Minterm.size();a++){
 			for(int b=0;b<B.size();b++){
-				if(minterm.at(a)== B.at(b)) flag=1;
+				if(Minterm.at(a)== B.at(b)) flag=1;
 			}
-			if(flag){ofp << " "; for(int c=0;c<bit_num(minterm.at(a));c++) ofp << " "; ofp << "x";  }
-		 	else {ofp << "  "; for(int c=0;c<bit_num(minterm.at(a));c++) ofp << " ";	}
+			if(flag){ofp << " "; for(int c=0;c<bit_num(Minterm.at(a));c++) ofp << " "; ofp << "x";  }
+		 	else {ofp << "  "; for(int c=0;c<bit_num(Minterm.at(a));c++) ofp << " ";	}
 			flag =0;
 		}
 
@@ -125,18 +146,18 @@ void print_chart(){
 	//Q initialize
 	vector<vector<int> > q;
 	q.resize(prime.size());
-	for(int a=0;a<prime.size();a++) q.at(a).resize(minterm.size());
+	for(int a=0;a<prime.size();a++) q.at(a).resize(Minterm.size());
 	Q = q;
 	for(int i=0;i<prime.size();i++){
-		for(int j=0;j<minterm.size();j++) Q.at(i).at(j)=0;
+		for(int j=0;j<Minterm.size();j++) Q.at(i).at(j)=0;
 	}
 
 	//chart information to 2-D vector Q
 	for(int i=0;i<prime.size();i++){
 		prime_term(prime.at(i));
 		for(int j=0;j<B.size();j++){
-			for(int a=0;a<minterm.size();a++){
-				if(B.at(j) == minterm.at(a)){
+			for(int a=0;a<Minterm.size();a++){
+				if(B.at(j) == Minterm.at(a)){
 					Q[i][a]= 1;
 				}
 			}
@@ -458,7 +479,7 @@ int in(int u){
 
 
 void PI(){
-	while(vline!=minterm.size()){
+	while(vline!=Minterm.size()){
 		int i = max_term();
 		output.push_back( convert_bit(prime.at(i)));		
 		index.push_back(i);
