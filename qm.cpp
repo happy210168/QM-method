@@ -46,7 +46,7 @@ void EPI(); //find essential prime implicant in chart and store in output
 void PI(); //find prime implicant in chart and store in output
 void vertical_line(); //draw vertical line in chart
 int in(int u); //check this term index have been output or not
-
+int isX(); //check don't care term 
 int main(){
 	int i=0;
 	string temp;
@@ -94,7 +94,6 @@ int main(){
 }
 
 void print_chart(){
-	int count =0;
 	int flag = 0;
 	ofp << "================================Result================================"<< endl;
 	ofp << "                     |" ;
@@ -105,15 +104,8 @@ void print_chart(){
 	for(int i=0;i<prime.size();i++){ 
 		//abcdefghij term
 		prime_term(prime.at(i));
-		count =0;
-		for(int a=0;a<B.size();a++){
-			for(int b=0;b<dontcare.size();b++){
-				if(B.at(a) == dontcare.at(b)) count++;
-			}
-		}
-		if(count==B.size()) continue;
+		if(isX()) continue;
 		
-
 		ofp << convert_bit(prime.at(i));
 		for(int a=0;a<21-convert_bit(prime.at(i)).size();a++) ofp << " ";
 		ofp << "|" ;
@@ -334,11 +326,23 @@ void sort(vector<int>& vec){
 	}
 }
 
+int isX(){
+		int count =0;
+	for(int a=0;a<B.size();a++){
+		count =0;
+		for(int b=0;b<dontcare.size();b++){
+			if(B.at(a) == dontcare.at(b)) count++;
+		}
+	}
+	if(count == B.size()) return 1;
+	else return 0;
+}
+
 void print_min(string str1,int a,int b){ //print [str] : minterm  e.g. 0000000000- : 0,1
 	X_pos(str1);
 	B.clear();
 	if(n!=0) forloop(n,str1);
-
+	prime_term(str1);
 	for(int j=0;j<group.at(a).size();j++){
 			if(j!=b && str1==group.at(a).at(j))
 			tmpgroup.at(a).at(j) = "x "+ tmpgroup.at(a).at(j);				
@@ -346,6 +350,7 @@ void print_min(string str1,int a,int b){ //print [str] : minterm  e.g. 000000000
 
 	if(tmpgroup.at(a).at(b).at(0)=='v') ofp << "v "<< str1 << ": "; //combined string
 	else if(tmpgroup.at(a).at(b).at(0)=='x') ofp << "x " << str1 <<": "; //duplicate string
+	else if(isX()) ofp << "d " << str1 << ": "; //doncare string
 	else ofp << "  " << str1 << ": ";
 
 	if(n!=0){
