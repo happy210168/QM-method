@@ -74,6 +74,10 @@ int main(){
 		}
 	}
 
+	sort(minterm);
+	sort(Minterm);
+	sort(dontcare);
+
 
 	divide(); //ROUND1(Divide minterm into 11 group)
 
@@ -95,11 +99,11 @@ int main(){
 
 void print_chart(){
 	int flag = 0;
-	ofp << "================================Result================================"<< endl;
+	ofp << "====================================Result======================================="<< endl;
 	ofp << "                     |" ;
 	for(int i=0;i<Minterm.size();i++) ofp << "  " << Minterm.at(i);
 	ofp << endl;
-	ofp << "---------------------+------------------------------------------------" << endl;
+	ofp << "---------------------+-----------------------------------------------------------" << endl;
 	
 	for(int i=0;i<prime.size();i++){ 
 		//abcdefghij term
@@ -121,7 +125,7 @@ void print_chart(){
 
 		ofp << endl;
 	}
-	ofp << "---------------------+------------------------------------------------" << endl;
+	ofp << "---------------------+-----------------------------------------------------------" << endl;
 
 	//print function 
 	char s = 'a'; 
@@ -164,6 +168,7 @@ void print_chart(){
 		if(i!=output.size()-1) ofp << output.at(i) << " + ";
 		else ofp << output.at(i) << endl;
 	}
+	ofp << "=================================================================================";
 
 }
 
@@ -180,12 +185,12 @@ int bit_num(int num){
 }
 
 void print_round(){
-		ofp << "============ROUND" << round <<  "============\n";
+		ofp << "==============ROUND " << round <<  "===============\n";
 		for(int i=0;i<N+1;i++){
 			for(int j=0;j<group.at(i).size();j++){
 				print_min(group.at(i).at(j),i,j);
 			}
-			if(group.at(i).size()!=0) ofp << " ------------------------" << endl;
+			if(group.at(i).size()!=0) ofp << " -------------------------------" << endl;
 		}
 		round++;
 }
@@ -318,7 +323,7 @@ void sort(vector<int>& vec){
 	for(int i=1;i<vec.size();i++){
 		now = i;
 		tmp = vec.at(i);
-	while(tmp<vec.at(now-1)){
+	while(now-1 >=0 && tmp<vec.at(now-1)){
 		vec.at(now) = vec.at(now-1);
 		now--;
 	}
@@ -348,10 +353,10 @@ void print_min(string str1,int a,int b){ //print [str] : minterm  e.g. 000000000
 			tmpgroup.at(a).at(j) = "x "+ tmpgroup.at(a).at(j);				
 	}
 
-	if(tmpgroup.at(a).at(b).at(0)=='v') ofp << "v "<< str1 << ": "; //combined string
-	else if(tmpgroup.at(a).at(b).at(0)=='x') ofp << "x " << str1 <<": "; //duplicate string
-	else if(isX()) ofp << "d " << str1 << ": "; //doncare string
-	else ofp << "  " << str1 << ": ";
+	if(tmpgroup.at(a).at(b).at(0)=='v') ofp << "v "<< str1 << " : "; //combined string
+	else if(tmpgroup.at(a).at(b).at(0)=='x') ofp << "x " << str1 <<" : "; //duplicate string
+	else if(isX()) ofp << "d " << str1 << " : "; //doncare string
+	else ofp << "  " << str1 << " : ";
 
 	if(n!=0){
 	for(int i=0;i<B.size();i++){
