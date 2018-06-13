@@ -74,8 +74,6 @@ int main(){
 		}
 	}
 
-	for(int i=0;i<minterm.size();i++) cout << minterm.at(i) << endl;
-	for(int i=0;i<Minterm.size();i++) cout << Minterm.at(i) << endl;
 
 	divide(); //ROUND1(Divide minterm into 11 group)
 
